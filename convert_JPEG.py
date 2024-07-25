@@ -1,3 +1,6 @@
+import os
+from PIL import Image
+
 def convert_to_jpeg(file_path) -> str:
 
         image = Image.open(file_path)

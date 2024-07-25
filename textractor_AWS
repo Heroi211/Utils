@@ -21,30 +21,25 @@ def convert_to_jpeg(file_path) -> str:
         image.save(new_image_path, "JPEG")
         
         return new_image_path
-
-        
-def analyze_id(file_path) -> dict:
-    results = {}
-    formatted = os.path.splitext(file_path)[1]
-    if formatted != ".jpeg":
-        file_path = convert_to_jpeg(file_path)
     
+def analyze_id(file_path):
     with open(file_path, 'rb') as document:
-        imageBytes = document.read()
+        image_bytes = document.read()
     
     client = boto3.client('textract', region_name=region, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
-    response = client.analyze_id(DocumentPages=[{'Bytes': imageBytes}])
-
+    response = client.analyze_id(DocumentPages=[{'Bytes': image_bytes}])
+    
+    results = []
     for doc_fields in response['IdentityDocuments']:
         for id_field in doc_fields['IdentityDocumentFields']:
             field_type = None
-            field_value = None
+            field_value = "Não Tem"
             for key, val in id_field.items():
                 if "Type" in str(key):
-                    field_type = val['Text']
-                elif "ValueDetection" in str(key):
-                    field_value = val['Text']
-            if field_type and field_value:
-                results[field_type] = field_value
+                    field_type = str(val['Text'])
+                if "ValueDetection" in str(key):
+                    field_value = str(val['Text'])
+            if field_type:
+                results.append({'Type': field_type, 'ValueDetection': field_value})
     
     return results
